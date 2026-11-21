@@ -44,6 +44,64 @@ int init_buffer(void) {
     return 0;
 }
 
+int insert_item(buffer_item item) {
+    //Wait for an empty slot
+    if (sem_wait(&empty) != 0) {
+        return -1;
+    }
+
+    //Lock the buffer
+    if (pthread_mutex_lock(&mutex) != 0) {
+        sem_post(&empty);   //give the slot back since we didn't use it
+        return -1;
+    }
+
+    //Critical section: add the item and advance the circular index
+    buffer[in] = item;
+    in = (in + 1) % BUFFER_SIZE;
+
+    //Unlock the buffer
+    if (pthread_mutex_unlock(&mutex) != 0) {
+        return -1;
+    }
+
+    //Signal that there is one more full slot
+    if (sem_post(&full) != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int remove_item(buffer_item *item) {
+    //Wait for a full slot
+    if (sem_wait(&full) != 0) {
+        return -1;
+    }
+
+    //Lock the buffer
+    if (pthread_mutex_lock(&mutex) != 0) {
+        sem_post(&full);    //give it back since we didn't consume
+        return -1;
+    }
+
+    //Critical section: take the item and advance the circular index
+    *item = buffer[out];
+    out = (out + 1) % BUFFER_SIZE;
+
+    //Unlock the buffer
+    if (pthread_mutex_unlock(&mutex) != 0) {
+        return -1;
+    }
+
+    //Signal that there is one more empty slot
+    if (sem_post(&empty) != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
 int main(int argc, char *argv[]) { 
     //Error handling for a bad or missing command line arguments
     if (argc != 4) {
