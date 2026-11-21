@@ -156,8 +156,31 @@ int main(int argc, char *argv[]) {
     if (init_buffer() != 0)
         return 1;
 
-    /* 3. Create producer thread(s) */
-    /* 4. Create consumer thread(s) */
+	/* 3. Create producer thread(s) */
+	// reserve enough memory for "n" ids
+	pthread_t *producers = malloc(num_producers * sizeof(pthread_t));
+	pthread_t *consumers = malloc(num_consumers * sizeof(pthread_t));
+	if (!producers || !consumers) {
+		fprintf(stderr, "malloc failed\n");
+		return 1;
+	}
+	// seeding random numbers
+	srand(time(NULL));
+
+	for (int i = 0; i < num_producers; i++) {
+		if (pthread_create(&producers[i], NULL, producer, NULL)) {
+			fprintf(stderr, "pthread_create failed\n");
+			return 1;
+		}
+	}
+
+	/* 4. Create consumer thread(s) */
+	for (int i = 0; i < num_consumers; i++) {
+		if (pthread_create(&consumers[i], NULL, consumer, NULL)) {
+			fprintf(stderr, "pthread_create failed\n");
+			return 1;
+		}
+	}
 
     /* 5. Sleep */
     sleep(sleep_time);
