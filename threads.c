@@ -44,6 +44,34 @@ int init_buffer(void) {
     return 0;
 }
 
+void *producer(void *param)
+{
+	buffer_item item;
+
+	while (true) {
+		sleep(rand() % 5 + 1); // picking a random number to sleep (arbitrary)
+		item = rand();
+		if (insert_item(item))
+			fprintf(stderr, "producer error condition\n");
+		else
+			printf("producer produced %d\n", item);
+	}
+	return NULL;
+}
+
+void *consumer(void *param)
+{
+	buffer_item item;
+    
+	while (true) {
+		sleep(rand() % 5 + 1); // picking a random number to sleep 
+		if (remove_item(&item))
+			fprintf(stderr, "consumer error condition\n");
+		else
+			printf("consumer consumed %d\n", item);
+	}
+	return NULL;
+
 int insert_item(buffer_item item) {
     //Wait for an empty slot
     if (sem_wait(&empty) != 0) {
