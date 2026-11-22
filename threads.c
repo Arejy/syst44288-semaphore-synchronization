@@ -72,6 +72,8 @@ void *consumer(void *param)
 	}
 	return NULL;
 
+// skeleton for inserting and removing taken from class textbook (Operating System Concepts by Silberschatz, Galvin, and Gagne)
+// around section 7.11
 int insert_item(buffer_item item) {
     //Wait for an empty slot
     if (sem_wait(&empty) != 0) {
