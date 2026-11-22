@@ -1,12 +1,23 @@
+/*
+*Name: Murtaza Mian & Harriet Liwayan
+*Student ID: 991635342 & 991639959
+*Professor: Cristina Ribeiro
+*SYST44288
+*Date: November 22, 2026
+*
+*Referencing Operating System Concepts by Silberschatz, Galvin, and Gagne to help solve the producer consumer problem
+*By using semaphores for process and thread synchronization.
+*/
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 #include "buffer.h"
 
-//Implementing the circular buffer
+//Implementing the circular buffer that will be the shared object
 buffer_item buffer[BUFFER_SIZE];
 int in = 0;
 int out = 0;
@@ -15,6 +26,7 @@ int out = 0;
 sem_t empty;
 sem_t full;
 
+//Section 5.9.4 Pthreads Synchronization of using pthread_mutex_t 
 //Implementing mutex lock instead of binary semaphore
 pthread_mutex_t mutex;
 
@@ -44,6 +56,7 @@ int init_buffer(void) {
     return 0;
 }
 
+//Based on Figure 5.26 outline of the producer and consumer thread
 void *producer(void *param)
 {
 	buffer_item item;
@@ -71,7 +84,9 @@ void *consumer(void *param)
 			printf("consumer consumed %d\n", item);
 	}
 	return NULL;
+}
 
+//Based on figure 7.11 for synchronization of the insert() method
 int insert_item(buffer_item item) {
     //Wait for an empty slot
     if (sem_wait(&empty) != 0) {
@@ -101,6 +116,7 @@ int insert_item(buffer_item item) {
     return 0;
 }
 
+//Based on figure 7.11 for synchronization of the remove() method 
 int remove_item(buffer_item *item) {
     //Wait for a full slot
     if (sem_wait(&full) != 0) {
@@ -145,12 +161,7 @@ int main(int argc, char *argv[]) {
     if (sleep_time <= 0 || num_producers <= 0 || num_consumers <= 0) {
         fprintf(stderr, "usage: %s <sleep_time> <num_producers> <num_consumers>\n", argv[0]);
         return 1;
-    } else{
-        //If arguments are correct test
-        //To be removed later
-        printf("Testing command line arguments: sleep_time=%d num_producers=%d num_consumers=%d\n", 
-            sleep_time, num_producers, num_consumers);
-    }
+    } 
 
     /* 2. Initialize buffer */
     if (init_buffer() != 0)
@@ -167,8 +178,9 @@ int main(int argc, char *argv[]) {
 	// seeding random numbers
 	srand(time(NULL));
 
+    //Section 4.4.1 threads creation using pthread_create() function (Pthreads API)
 	for (int i = 0; i < num_producers; i++) {
-		if (pthread_create(&producers[i], NULL, producer, NULL)) {
+		if (pthread_create(&producers[i], NULL, producer, NULL)) { 
 			fprintf(stderr, "pthread_create failed\n");
 			return 1;
 		}
@@ -186,5 +198,7 @@ int main(int argc, char *argv[]) {
     sleep(sleep_time);
 
     /* 6. Exit */
+    free(producers);
+    free(consumers);
     return 0;
 }
